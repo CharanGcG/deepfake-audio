@@ -1,0 +1,26 @@
+# -------------------- requirements.txt --------------------
+# Core ML libraries
+torch>=2.0.0
+torchvision>=0.15.0
+timm>=0.9.0
+transformers>=4.30.0
+
+
+# Data & preprocessing
+pandas>=2.0.0
+Pillow>=9.0.0
+opencv-python>=4.7.0
+scikit-learn>=1.2.0
+
+
+# Visualization & explainability
+matplotlib>=3.7.0
+grad-cam>=1.4.0
+
+
+# Face utilities
+facenet-pytorch>=2.5.2
+
+
+# Logging
+tensorboard>=2.12.0
