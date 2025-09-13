@@ -353,3 +353,11 @@ Thank you — once you verify this README matches your local file names and scri
 * generate CI smoke tests to run on each PR.
 
 Which one would you like next?
+
+
+
+
+
+Running: 
+
+python -m code.train `    --train_csv dataset/train.csv `    --val_csv dataset/valid.csv `    --root_dir dataset/real_vs_fake/real_vs_fake `    --backbone cvt_13 `    --batch_size 5 `    --epochs_head 1 `    --epochs_finetune 1 `    --lr_head 1e-3 `    --lr_backbone 1e-4 `    --seed 42 `    --run_dir outputs/run1    --pretrained   --do_cam

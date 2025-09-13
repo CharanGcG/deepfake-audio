@@ -1,17 +1,3 @@
-"""
-utils package for deepfake detection project.
-
-Contains:
-- checkpoint.py: save/load model checkpoints
-- metrics.py: compute evaluation metrics
-- scheduler.py: learning rate scheduler with warmup
-- seed.py: reproducibility utilities
-- logger.py: session logging utilities
-
-Each module follows best practices, with docstrings, exception handling,
-and edge case safety.
-"""
-
 # utils/checkpoint.py
 import os
 import torch

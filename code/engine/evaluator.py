@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from typing import Dict, Any
-from ..utils.metrics import compute_metrics
+from code.utils.metrics import compute_metrics
 
 
 def evaluate(model: nn.Module, dataloader: DataLoader, criterion, device: str) -> Dict[str, Any]:

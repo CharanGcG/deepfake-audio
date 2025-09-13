@@ -8,11 +8,16 @@ Provides CvT variants and optionally timm-based models if available.
 import torch.nn as nn
 import timm
 
-try:
-    from cvt import cvt_13, cvt_21, cvt_w24, CvT
-except ImportError:
-    cvt_13 = cvt_21 = cvt_w24 = None
-    CvT = None
+from code.models.cvt import cvt_13, cvt_21, cvt_w24
+
+
+def _strip_head(model: nn.Module) -> nn.Module:
+    """Remove classification head if present, keep as pure feature extractor."""
+    if hasattr(model, "head"):
+        model.head = nn.Identity()
+    if hasattr(model, "fc"):
+        model.fc = nn.Identity()
+    return model
 
 
 def create_backbone(name: str = "cvt_13", pretrained: bool = False) -> nn.Module:
@@ -24,11 +29,14 @@ def create_backbone(name: str = "cvt_13", pretrained: bool = False) -> nn.Module
     """
     name = name.lower()
     if name == "cvt_13" and cvt_13:
-        return cvt_13(pretrained=pretrained)
+        model = cvt_13(pretrained=pretrained)
+        return _strip_head(model)
     elif name == "cvt_21" and cvt_21:
-        return cvt_21(pretrained=pretrained)
+        model = cvt_21(pretrained=pretrained)
+        return _strip_head(model)
     elif name == "cvt_w24" and cvt_w24:
-        return cvt_w24(pretrained=pretrained)
+        model = cvt_w24(pretrained=pretrained)
+        return _strip_head(model)
     else:
         # fallback to timm
         try:

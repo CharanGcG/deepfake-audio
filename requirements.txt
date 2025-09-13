@@ -1,26 +1,35 @@
-# -------------------- requirements.txt --------------------
 # Core ML libraries
 torch>=2.0.0
 torchvision>=0.15.0
 timm>=0.9.0
 transformers>=4.30.0
 
-
-# Data & preprocessing
+# Numerical / data
+numpy>=1.20.3,<2.0
 pandas>=2.0.0
 Pillow>=9.0.0
+
+# Data & preprocessing
 opencv-python>=4.7.0
 scikit-learn>=1.2.0
-
 
 # Visualization & explainability
 matplotlib>=3.7.0
 grad-cam>=1.4.0
-
+tensorboard>=2.12.0
+tensorboardX
 
 # Face utilities
 facenet-pytorch>=2.5.2
 
+# Extra utilities (from your top list)
+pyyaml
+json_tricks
+yacs
+tensorwatch
+ptflops
+einops
 
-# Logging
-tensorboard>=2.12.0
+# Optional: pin versions below only if you need strict reproducibility
+# e.g. timm==0.3.2   # only if you have legacy code that requires this exact old release
+# numpy==1.23.5      # example of a stricter pin if you prefer a fixed numpy

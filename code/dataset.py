@@ -23,14 +23,14 @@ import torch
 
 
 class DeepfakeDataset(Dataset):
-    def __init__(self, csv_path: str, root_dir: str, transform: Optional[Callable] = None, image_size: int = 256):
+    def __init__(self, csv_path: str, root_dir: str, transform: Optional[Callable] = None, img_size: int = 256):
         """Create dataset from CSV.
 
         Args:
             csv_path: Path to CSV file (must contain 'path' and 'label')
             root_dir: Base directory for image paths in CSV
             transform: Optional callable applied to PIL.Image; must return torch.Tensor
-            image_size: Fallback image size when creating synthetic zero images
+            img_size: Fallback image size when creating synthetic zero images
         """
         if not os.path.isfile(csv_path):
             raise FileNotFoundError(f"CSV not found: {csv_path}")
@@ -41,7 +41,7 @@ class DeepfakeDataset(Dataset):
 
         self.root_dir = root_dir
         self.transform = transform
-        self.image_size = image_size
+        self.img_size = img_size
 
         # Reset index for safe integer indexing
         self.df = self.df.reset_index(drop=True)
@@ -56,13 +56,13 @@ class DeepfakeDataset(Dataset):
             # Returning PIL image for compatibility with transforms
             # Using RGB
             print(f"Warning: image not found: {full_path}")
-            return Image.new("RGB", (self.image_size, self.image_size), (0, 0, 0))
+            return Image.new("RGB", (self.img_size, self.img_size), (0, 0, 0))
         try:
             img = Image.open(full_path).convert("RGB")
             return img
         except Exception as e:
             print(f"Warning: failed to open image {full_path}: {e}")
-            return Image.new("RGB", (self.image_size, self.image_size), (0, 0, 0))
+            return Image.new("RGB", (self.img_size, self.img_size), (0, 0, 0))
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int, Dict[str, Any]]:
         row = self.df.iloc[idx]
@@ -77,7 +77,7 @@ class DeepfakeDataset(Dataset):
             except Exception as e:
                 # If transform fails, return zero tensor
                 print(f"Warning: transform failed for {rel_path}: {e}")
-                img = torch.zeros((3, self.image_size, self.image_size), dtype=torch.float32)
+                img = torch.zeros((3, self.img_size, self.img_size), dtype=torch.float32)
         else:
             # Convert to tensor manually (simple fallback)
             img = self._pil_to_tensor(img)

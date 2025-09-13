@@ -9,11 +9,11 @@ from torchvision import transforms
 from typing import Callable
 
 
-def get_train_transform(image_size: int = 256) -> Callable:
+def get_train_transform(img_size: int = 256) -> Callable:
     """Return a torchvision transform pipeline for training images.
 
     Args:
-        image_size: expected image size (images are already 256x256 in your dataset)
+        img_size: expected image size (images are already 256x256 in your dataset)
     """
     return transforms.Compose([
         transforms.RandomHorizontalFlip(p=0.5),
@@ -24,7 +24,7 @@ def get_train_transform(image_size: int = 256) -> Callable:
     ])
 
 
-def get_val_transform(image_size: int = 256) -> Callable:
+def get_val_transform(img_size: int = 256) -> Callable:
     """Return transform pipeline for validation/test images."""
     return transforms.Compose([
         transforms.ToTensor(),

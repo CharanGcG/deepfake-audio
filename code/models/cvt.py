@@ -1,0 +1,86 @@
+# code/models/cvt.py
+"""
+Simplified CvT implementation for Deepfake project.
+Based on: https://arxiv.org/abs/2103.15808
+"""
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class ConvEmbedding(nn.Module):
+    """Convolutional patch embedding layer."""
+    def __init__(self, in_channels=3, embed_dim=64, kernel_size=7, stride=4, padding=2):
+        super().__init__()
+        self.proj = nn.Conv2d(in_channels, embed_dim, kernel_size, stride, padding)
+        self.norm = nn.LayerNorm(embed_dim)
+
+    def forward(self, x):
+        x = self.proj(x)                      # (B, embed_dim, H', W')
+        B, C, H, W = x.shape
+        x = x.flatten(2).transpose(1, 2)      # (B, N, C)
+        x = self.norm(x)
+        return x, (H, W)
+
+
+class TransformerBlock(nn.Module):
+    """Basic Transformer block with multi-head attention."""
+    def __init__(self, embed_dim, num_heads, mlp_ratio=4.0, dropout=0.1):
+        super().__init__()
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.attn = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout, batch_first=True)
+        self.norm2 = nn.LayerNorm(embed_dim)
+        self.mlp = nn.Sequential(
+            nn.Linear(embed_dim, int(embed_dim * mlp_ratio)),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(int(embed_dim * mlp_ratio), embed_dim),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, x):
+        x = x + self.attn(self.norm1(x), self.norm1(x), self.norm1(x))[0]
+        x = x + self.mlp(self.norm2(x))
+        return x
+
+
+class CvT(nn.Module):
+    """Simplified CvT backbone."""
+    def __init__(self, img_size=256, in_channels=3, num_classes=2, embed_dim=64, depth=6, num_heads=4):
+        super().__init__()
+        self.embed = ConvEmbedding(in_channels, embed_dim)
+
+        self.blocks = nn.ModuleList([
+            TransformerBlock(embed_dim, num_heads) for _ in range(depth)
+        ])
+
+        self.norm = nn.LayerNorm(embed_dim)
+        self.head = nn.Linear(embed_dim, num_classes)
+
+    def forward(self, x):
+        # Embedding
+        x, (H, W) = self.embed(x)  # (B, N, C)
+
+        # Transformer blocks
+        for blk in self.blocks:
+            x = blk(x)
+
+        # Classification head (CLS token = mean pool here)
+        x = self.norm(x)
+        x = x.mean(1)  # Global average pooling
+        return self.head(x)
+
+
+def cvt_13(pretrained=False, **kwargs):
+    """CvT-13 like configuration (not exact)."""
+    return CvT(embed_dim=64, depth=6, num_heads=4, **kwargs)
+
+
+def cvt_21(pretrained=False, **kwargs):
+    """CvT-21 like configuration (larger)."""
+    return CvT(embed_dim=128, depth=12, num_heads=8, **kwargs)
+
+def cvt_w24(pretrained=False, **kwargs):
+    """CvT-W24 like configuration (wide and deep)."""
+    return CvT(embed_dim=384, depth=24, num_heads=12, **kwargs)

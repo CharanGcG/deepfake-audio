@@ -23,9 +23,12 @@ class DeepfakeModel(nn.Module):
         else:
             # fallback - try with dummy forward
             try:
-                import torch
-                dummy = torch.zeros(1, 3, 256, 256)
+                dummy = torch.zeros(1, 3, 224, 224)
                 out = self.backbone(dummy)
+                if isinstance(out, (list, tuple)):
+                    out = out[-1]
+                if out.dim() > 2:
+                    out = out.mean(dim=[2, 3])  # global avg pool
                 in_features = out.shape[1]
             except Exception:
                 in_features = 768  # safe default
@@ -36,6 +39,8 @@ class DeepfakeModel(nn.Module):
         feats = self.backbone(x)
         if isinstance(feats, (list, tuple)):
             feats = feats[-1]
+        if feats.dim() > 2:
+            feats = feats.mean(dim=[2, 3])  # global avg pool
         logits = self.classifier(feats)
         return logits
 
