@@ -21,7 +21,7 @@ def train_one_epoch(model: nn.Module, dataloader: DataLoader, criterion, optimiz
         images, labels = images.to(device), labels.to(device)
 
         optimizer.zero_grad()
-        with autocast(device_type="cuda"):
+        with autocast(enabled=(device=="cuda")):
             outputs = model(images)
             loss = criterion(outputs, labels)
 
@@ -62,7 +62,7 @@ def evaluate(model: nn.Module, dataloader: DataLoader, criterion, device: str, l
             images, labels, _ = batch
             images, labels = images.to(device), labels.to(device)
 
-            with autocast(device_type="cuda"):
+            with autocast(enabled=(device=="cuda")):
                 outputs = model(images)
                 loss = criterion(outputs, labels)
 
