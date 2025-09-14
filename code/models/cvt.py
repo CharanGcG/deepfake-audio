@@ -1,4 +1,4 @@
-# --- code/models/cvt.py ---
+# --- code/models/cvt.py (Updated: CAM-compatible, safe for HF output) ---
 """
 CvT models with optional pretrained weights (via timm or Hugging Face).
 """
@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 try:
-    from transformers import CvtForImageClassification, CvtModel
+    from transformers import CvtForImageClassification, CvtModel, BaseModelOutput
     _has_hf = True
 except ImportError:
     _has_hf = False
@@ -66,40 +66,39 @@ class CvT(nn.Module):
 
 class HuggingFaceCvTBackbone(nn.Module):
     def __init__(self, model_name="microsoft/cvt-w24-384-22k", pretrained=True, return_features="hidden_state"):
-        """
-        return_features: "logits" | "hidden_state"
-        """
         super().__init__()
         if not _has_hf:
             raise ImportError("Transformers library is required for HuggingFaceCvTBackbone.")
-        if return_features == "hidden_state":
-            # use base model to get last_hidden_state
-            self.model = CvtModel.from_pretrained(model_name) if pretrained \
-                         else CvtModel.from_config(model_name)
-            self._use_logits = False
-        else:
-            # use classification heads for logits
-            self.model = CvtForImageClassification.from_pretrained(model_name) if pretrained \
-                         else CvtForImageClassification.from_config(model_name)
-            # strip off classifier
-            self.model.classifier = nn.Identity()
-            self._use_logits = True
         self.return_features = return_features
 
+        if return_features == "hidden_state":
+            # CAM-compatible features
+            self.model = CvtModel.from_pretrained(model_name) if pretrained else CvtModel.from_config(model_name)
+            self._use_logits = False
+        else:
+            self.model = CvtForImageClassification.from_pretrained(model_name) if pretrained else CvtForImageClassification.from_config(model_name)
+            self.model.classifier = nn.Identity()
+            self._use_logits = True
+
     def forward(self, x):
+        outputs = self.model(pixel_values=x)
         if self._use_logits:
-            outputs = self.model(pixel_values=x)
-            # logits shape: (batch, num_classes)
             return outputs.logits
         else:
-            outputs = self.model(pixel_values=x)
-            # last_hidden_state: (batch, seq_len, hidden_dim)
-            feat = outputs.last_hidden_state
-            # mean-pool
-            return feat.mean(dim=1)
+            # Extract last_hidden_state safely
+            if hasattr(outputs, 'last_hidden_state') and outputs.last_hidden_state is not None:
+                feat = outputs.last_hidden_state  # (B, seq_len, hidden_dim)
+            else:
+                raise ValueError("last_hidden_state not available. Check model version/config.")
+
+            B, seq_len, C = feat.size()
+            H = W = int(seq_len ** 0.5)
+            feat_2d = feat.transpose(1, 2).reshape(B, C, H, W)
+            return feat_2d
 
 
-# Factory functions for CvT variants
+# Factory functions
+
 def cvt_13(pretrained=False, **kwargs):
     if _has_hf:
         return HuggingFaceCvTBackbone("microsoft/cvt-13-384-22k", pretrained=pretrained, **kwargs)
