@@ -1,19 +1,3 @@
-# code/dataset.py
-"""
-DeepfakeDataset
-
-Reads a CSV produced by the Kaggle dataset and yields (image_tensor, label, meta)
-meta can include the relative path and index for logging/troubleshooting.
-
-Assumptions:
-- CSV contains columns: 'path' and 'label' (0 for fake, 1 for real)
-- ``root_dir`` is the parent directory where paths in CSV are relative to
-
-Robustness:
-- If an image file is missing or unreadable, returns a zero tensor and logs a warning
-- Supports optional transform callable (PIL -> Tensor)
-"""
-
 from typing import Optional, Callable, Tuple, Dict, Any
 from torch.utils.data import Dataset
 from PIL import Image
@@ -21,9 +5,8 @@ import pandas as pd
 import os
 import torch
 
-
 class DeepfakeDataset(Dataset):
-    def __init__(self, csv_path: str, root_dir: str, transform: Optional[Callable] = None, img_size: int = 256):
+    def __init__(self, csv_path: str, root_dir: str, transform: Optional[Callable] = None, img_size: int = 256, logger=None):
         """Create dataset from CSV.
 
         Args:
@@ -50,7 +33,9 @@ class DeepfakeDataset(Dataset):
         return len(self.df)
 
     def _load_image(self, rel_path: str) -> Image.Image:
-        full_path = os.path.join(self.root_dir, rel_path)
+        # Normalize path slashes for cross-platform compatibility
+        normalized_path = os.path.normpath(rel_path)
+        full_path = os.path.join(self.root_dir, normalized_path)
         if not os.path.isfile(full_path):
             # Missing file -> create black image
             # Returning PIL image for compatibility with transforms
@@ -93,4 +78,3 @@ class DeepfakeDataset(Dataset):
         arr = arr.reshape(img.size[1], img.size[0], 3)
         arr = arr.permute(2, 0, 1).float().div(255.0)
         return arr
-

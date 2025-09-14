@@ -1,11 +1,12 @@
 # Core ML libraries
-torch>=2.0.0
-torchvision>=0.15.0
+torch==2.5.1+cu121      # match your installed version
+torchvision==0.20.1+cu121
+torchaudio==2.5.1+cu121
 timm>=0.9.0
 transformers>=4.30.0
 
 # Numerical / data
-numpy>=1.20.3,<2.0
+numpy<2.0               # you already hit numpy 2.x warnings, safe to lock <2.0
 pandas>=2.0.0
 Pillow>=9.0.0
 
@@ -22,14 +23,10 @@ tensorboardX
 # Face utilities
 facenet-pytorch>=2.5.2
 
-# Extra utilities (from your top list)
+# Extra utilities
 pyyaml
 json_tricks
 yacs
 tensorwatch
 ptflops
 einops
-
-# Optional: pin versions below only if you need strict reproducibility
-# e.g. timm==0.3.2   # only if you have legacy code that requires this exact old release
-# numpy==1.23.5      # example of a stricter pin if you prefer a fixed numpy

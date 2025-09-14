@@ -1,4 +1,5 @@
-import sys
-from CvT.lib.models.cls_cvt import cvt_13
-model = cvt_13()
-print(model.__class__.__name__)
+import torch
+
+print("CUDA available:", torch.cuda.is_available())
+print("CUDA version (from PyTorch):", torch.version.cuda)
+print("GPU name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")

@@ -361,3 +361,36 @@ Which one would you like next?
 Running: 
 
 python -m code.train `    --train_csv dataset/train.csv `    --val_csv dataset/valid.csv `    --root_dir dataset/real_vs_fake/real_vs_fake `    --backbone cvt_13 `    --batch_size 5 `    --epochs_head 1 `    --epochs_finetune 1 `    --lr_head 1e-3 `    --lr_backbone 1e-4 `    --seed 42 `    --run_dir outputs/run1    --pretrained   --do_cam
+
+
+
+. venv\Scripts\Activate.ps1
+
+
+
+
+python -m code.train \
+    --train_csv dataset/batches/train1.csv \
+    --val_csv dataset/batches/valid1.csv \
+    --root_dir dataset/real_vs_fake/real_vs_fake \
+    --backbone cvt_13 \
+    --batch_size 5 \
+    --epochs_head 1 \
+    --epochs_finetune 1 \
+    --lr_head 1e-3 \
+    --lr_backbone 1e-4 \
+    --seed 42 \
+    --run_dir outputs/run1 \
+    --pretrained \
+    --do_cam
+
+
+
+
+
+python -m  code.train --train_csv dataset/batches/batch1/train1.csv --val_csv dataset/batches/batch1/valid1.csv --root_dir dataset/real_vs_fake/real_vs_fake --backbone cvt_13 --batch_size 4 --epochs_head 25 --epochs_finetune 15 --lr_head 1e-3 --lr_backbone 1e-4 --seed 42 --run_dir outputs/train_session_1 --pretrained --do_cam
+
+
+
+
+python -m code.train --train_csv dataset/batches/batch2/train.csv --val_csv dataset/batches/batch2/valid.csv --root_dir dataset/real_vs_fake/real_vs_fake --backbone cvt_13 --batch_size 32 --epochs_head 40 --epochs_finetune 20 --lr_head 3e-3 --lr_backbone 3e-4 --seed 42 --run_dir outputs/train_session_2 --pretrained --do_cam

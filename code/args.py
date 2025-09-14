@@ -17,7 +17,7 @@ def get_args():
     parser.add_argument("--run_dir", type=str, default="models/version_1")
     # Paths
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint for evaluation")
-    parser.add_argument("--img_size", type=int, default=128, help="Resize images to this size")
+    parser.add_argument("--img_size", type=int, default=256, help="Resize images to this size")
 
 
     # Model

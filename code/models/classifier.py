@@ -7,7 +7,7 @@ We assume binary classification (real vs fake).
 
 import torch
 import torch.nn as nn
-from .backbones import create_backbone
+from code.models.backbones import create_backbone
 
 
 class DeepfakeModel(nn.Module):

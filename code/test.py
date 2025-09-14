@@ -1,10 +1,10 @@
 import torch
 from torch.utils.data import DataLoader
-from .args import get_args
-from .dataset import DeepfakeDataset
-from .transforms import get_val_transform
-from .models.classifier import DeepfakeModel
-from .engine.evaluator import evaluate
+from code.args import get_args
+from code.dataset import DeepfakeDataset
+from code.transforms import get_val_transform
+from code.models.classifier import DeepfakeModel
+from code.engine.evaluator import evaluate
 import torch.nn as nn
 
 

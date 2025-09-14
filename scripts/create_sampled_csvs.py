@@ -1,13 +1,13 @@
 import os
 import pandas as pd
 
-new_train_path = "train3.csv"
-new_valid_path = "valid3.csv"
+new_train_path = "train.csv"
+new_valid_path = "valid.csv"
 
 def create_sampled_csvs(
     train_csv_path="dataset/train.csv",
     valid_csv_path="dataset/valid.csv",
-    output_dir="dataset/batches",
+    output_dir="dataset/batches/batch2",
     total_train_images=100,
     total_valid_images=20,
     train_offset=0,
@@ -38,6 +38,7 @@ def create_sampled_csvs(
     fake_train = train_df.iloc[fake_train_start : fake_train_start + half_train]
 
     sampled_train = pd.concat([real_train, fake_train])
+    sampled_train = sampled_train.sample(frac=1).reset_index(drop=True)  # shuffle rows
     train_output_path = os.path.join(output_dir, new_train_path)
     sampled_train.to_csv(train_output_path, index=False)
     print(f"Sampled train CSV saved to {train_output_path}")
@@ -52,6 +53,7 @@ def create_sampled_csvs(
     fake_valid = valid_df.iloc[fake_valid_start : fake_valid_start + half_valid]
 
     sampled_valid = pd.concat([real_valid, fake_valid])
+    sampled_valid = sampled_valid.sample(frac=1).reset_index(drop=True)  # shuffle rows
     valid_output_path = os.path.join(output_dir, new_valid_path)
     sampled_valid.to_csv(valid_output_path, index=False)
     print(f"Sampled valid CSV saved to {valid_output_path}")
@@ -60,8 +62,8 @@ def create_sampled_csvs(
 # Example usage:
 if __name__ == "__main__":
     create_sampled_csvs(
-        total_train_images=3,
-        total_valid_images=2,
+        total_train_images=10000,
+        total_valid_images=1500,
         train_offset=0,
         valid_offset=0
     )
