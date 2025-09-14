@@ -6,6 +6,7 @@ from typing import Dict, Any
 from code.utils.metrics import compute_metrics
 from code.utils.checkpoint import save_checkpoint
 from torch.amp import autocast, GradScaler
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 import logging
 
 
@@ -102,8 +103,10 @@ def run_phase(phase_name: str, model: nn.Module, train_loader: DataLoader, val_l
 
         if scheduler is not None:
             try:
-                scheduler.step()
-                logger.info("Scheduler step executed")
+                if isinstance(scheduler, ReduceLROnPlateau):
+                    scheduler.step(val_metrics.get("loss", 0.0))
+                else:
+                    scheduler.step()
             except Exception as e:
                 logger.warning(f"Scheduler step failed: {e}")
 
