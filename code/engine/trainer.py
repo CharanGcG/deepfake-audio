@@ -17,7 +17,8 @@ def train_one_epoch(model: nn.Module, dataloader: DataLoader, criterion, optimiz
     all_labels, all_preds, all_probs = [], [], []
 
     for batch_idx, batch in enumerate(dataloader):
-        logger.info(f"Processing batch {batch_idx+1}/{len(dataloader)}")
+        if (batch_idx + 1) % 50 == 0:
+            logger.info(f"Processing batch {batch_idx+1}/{len(dataloader)}")
         images, labels, _ = batch
         images, labels = images.to(device), labels.to(device)
 
@@ -59,7 +60,8 @@ def evaluate(model: nn.Module, dataloader: DataLoader, criterion, device: str, l
 
     with torch.no_grad():
         for batch_idx, batch in enumerate(dataloader):
-            logger.info(f"Evaluating batch {batch_idx+1}/{len(dataloader)}")
+            if (batch_idx + 1) % 50 == 0:
+                logger.info(f"Evaluating batch {batch_idx+1}/{len(dataloader)}")
             images, labels, _ = batch
             images, labels = images.to(device), labels.to(device)
 
