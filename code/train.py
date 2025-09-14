@@ -108,7 +108,7 @@ def main():
     if args.do_cam:
         logger.info("Running GradCAM visualization...")
         from .cam import run_gradcam
-        run_gradcam(model, val_ds, device, args.run_dir)
+        run_gradcam(model, val_ds, device, args.run_dir, 20)
         logger.info("GradCAM visualization complete")
 
 

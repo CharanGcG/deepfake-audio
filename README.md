@@ -393,4 +393,8 @@ python -m  code.train --train_csv dataset/batches/batch1/train1.csv --val_csv da
 
 
 
-python -m code.train --train_csv dataset/batches/batch2/train.csv --val_csv dataset/batches/batch2/valid.csv --root_dir dataset/real_vs_fake/real_vs_fake --backbone cvt_13 --batch_size 32 --epochs_head 40 --epochs_finetune 20 --lr_head 3e-3 --lr_backbone 3e-4 --seed 42 --run_dir outputs/train_session_2 --pretrained --do_cam
+python -m code.train --train_csv dataset/batches/small_batch/train.csv --val_csv dataset/batches/small_batch/valid.csv --root_dir dataset/real_vs_fake/real_vs_fake --backbone cvt_13 --batch_size 32 --epochs_head 10 --epochs_finetune 10 --lr_head 1e-3 --lr_backbone 1e-4 --seed 42 --run_dir outputs/sample_train_1 --pretrained --do_cam
+
+
+
+python -m code.train --train_csv dataset/batches/small_batch/train.csv --val_csv dataset/batches/small_batch/valid.csv --root_dir dataset/real_vs_fake/real_vs_fake --backbone cvt_13 --batch_size 32 --epochs_head 5 --epochs_finetune 5 --lr_head 1e-3 --lr_backbone 1e-4 --seed 42 --run_dir outputs/sample_train_1 --pretrained --do_cam

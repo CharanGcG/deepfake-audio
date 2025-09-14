@@ -30,3 +30,7 @@ yacs
 tensorwatch
 ptflops
 einops
+
+
+# Testing
+pytest

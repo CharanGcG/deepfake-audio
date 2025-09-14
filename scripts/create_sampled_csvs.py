@@ -7,7 +7,7 @@ new_valid_path = "valid.csv"
 def create_sampled_csvs(
     train_csv_path="dataset/train.csv",
     valid_csv_path="dataset/valid.csv",
-    output_dir="dataset/batches/batch2",
+    output_dir="dataset/batches/small_batch",
     total_train_images=100,
     total_valid_images=20,
     train_offset=0,
@@ -62,8 +62,8 @@ def create_sampled_csvs(
 # Example usage:
 if __name__ == "__main__":
     create_sampled_csvs(
-        total_train_images=10000,
-        total_valid_images=1500,
+        total_train_images=100,
+        total_valid_images=20,
         train_offset=0,
         valid_offset=0
     )
