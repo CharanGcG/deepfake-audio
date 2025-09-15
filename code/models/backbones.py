@@ -7,8 +7,8 @@ from code.utils.logger import get_logger
 from code.args import get_args
 
 
-args = get_args()
-logger = get_logger(args.run_dir, name="train")
+#args = get_args()
+#logger = get_logger(args.run_dir, name="train")
 
 
 def _strip_head(model: nn.Module) -> nn.Module:
@@ -38,7 +38,6 @@ def create_backbone(name: str, pretrained: bool) -> nn.Module:
     # Microsoft CvT-13 or custom fallback
     if name == "cvt_13":
         model = cvt_13(pretrained=pretrained)
-        logger.info("Using microsoft cvt")
         return _strip_head(model)
 
     # Fall back to timm models

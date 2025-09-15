@@ -19,8 +19,8 @@ except ImportError:
 
 from code.utils.logger import get_logger
 
-args = get_args()
-logger = get_logger(args.run_dir, name="train")
+#args = get_args()
+#logger = get_logger(args.run_dir, name="train")
 
 
 class ConvEmbedding(nn.Module):
@@ -130,7 +130,5 @@ class MicrosoftCvTBackbone(nn.Module):
 
 def cvt_13(pretrained=False, **kwargs):
     if _has_ms:
-        logger.info("Using Microsoft CVT as backbone")
         return MicrosoftCvTBackbone(pretrained=pretrained)
-    logger.info("Using custom cvt for training")
     return CvT(embed_dim=64, depth=6, num_heads=4, **kwargs)

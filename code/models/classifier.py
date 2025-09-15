@@ -4,8 +4,8 @@ from code.models.backbones import create_backbone
 from code.utils.logger import get_logger
 from code.args import get_args
 
-args = get_args()
-logger = get_logger(args.run_dir, name="train")
+#args = get_args()
+#logger = get_logger(args.run_dir, name="train")
 
 
 class DeepfakeModel(nn.Module):
