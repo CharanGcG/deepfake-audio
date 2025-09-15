@@ -1,9 +1,20 @@
 # --- code/models/backbones.py ---
 
-from code.models.cvt import cvt_13, cvt_21, cvt_w24, HuggingFaceCvTBackbone
 import torch.nn as nn
+import timm
+from code.models.cvt import cvt_13
+from code.utils.logger import get_logger
+from code.args import get_args
+
+
+args = get_args()
+logger = get_logger(args.run_dir, name="train")
+
 
 def _strip_head(model: nn.Module) -> nn.Module:
+    """
+    Remove any existing classification head from the backbone.
+    """
     if hasattr(model, "head"):
         model.head = nn.Identity()
     if hasattr(model, "fc"):
@@ -11,27 +22,31 @@ def _strip_head(model: nn.Module) -> nn.Module:
     return model
 
 
-def create_backbone(name: str = "cvt_w24", pretrained: bool = True) -> nn.Module:
+def create_backbone(name: str, pretrained: bool) -> nn.Module:
+    """
+    Create a CvT-13 backbone or timm model by name.
+
+    Args:
+        name: Backbone identifier ("cvt_13" or timm model name)
+        pretrained: Whether to load pretrained weights
+
+    Returns:
+        nn.Module: Backbone model with no classification head
+    """
     name = name.lower()
-    if name.startswith("hf_cvt"):
-        model_name_map = {
-            "hf_cvt_w24": "microsoft/cvt-w24-384",
-            "hf_cvt_21": "microsoft/cvt-21-384",
-            "hf_cvt_13": "microsoft/cvt-13-384"
-        }
-        hf_model_name = model_name_map.get(name, "microsoft/cvt-w24-384")
-        return HuggingFaceCvTBackbone(model_name=hf_model_name, pretrained=pretrained)
-    else:
-        if name == "cvt_13" and cvt_13:
-            return _strip_head(cvt_13(pretrained=pretrained))
-        elif name == "cvt_21" and cvt_21:
-            return _strip_head(cvt_21(pretrained=pretrained))
-        elif name == "cvt_w24" and cvt_w24:
-            return _strip_head(cvt_w24(pretrained=pretrained))
-        else:
-            import timm
-            try:
-                model = timm.create_model(name, pretrained=pretrained, num_classes=0, global_pool="avg")
-                return model
-            except Exception as e:
-                raise ValueError(f"Unknown backbone or failed to create: {name}. Error: {e}")
+
+    # Microsoft CvT-13 or custom fallback
+    if name == "cvt_13":
+        model = cvt_13(pretrained=pretrained)
+        logger.info("Using microsoft cvt")
+        return _strip_head(model)
+
+    # Fall back to timm models
+    try:
+        model = timm.create_model(
+            name, pretrained=pretrained, num_classes=0, global_pool="avg"
+        )
+        return model
+    except Exception as e:
+        raise ValueError(f"Unknown backbone '{name}' or failed to create: {e}")
+

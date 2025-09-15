@@ -10,3 +10,4 @@ checkpoints/
 outputs/
 .env
 .pytest_cache/
+CvT/

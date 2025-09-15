@@ -4,9 +4,10 @@ from PIL import Image
 import pandas as pd
 import os
 import torch
+from torchvision import transforms
 
 class DeepfakeDataset(Dataset):
-    def __init__(self, csv_path: str, root_dir: str, transform: Optional[Callable] = None, img_size: int = 256, logger=None):
+    def __init__(self, csv_path: str, root_dir: str, transform: Optional[Callable] = None, img_size: int = 224, logger=None):
         """Create dataset from CSV.
 
         Args:
@@ -23,8 +24,17 @@ class DeepfakeDataset(Dataset):
             raise ValueError("CSV must contain 'path' and 'label' columns")
 
         self.root_dir = root_dir
-        self.transform = transform
         self.img_size = img_size
+
+        # Default transform includes resize + ImageNet normalization if none provided
+        if transform is None:
+            self.transform = transforms.Compose([
+                transforms.Resize((img_size, img_size)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
+            ])
+        else:
+            self.transform = transform
 
         # Reset index for safe integer indexing
         self.df = self.df.reset_index(drop=True)
@@ -33,13 +43,9 @@ class DeepfakeDataset(Dataset):
         return len(self.df)
 
     def _load_image(self, rel_path: str) -> Image.Image:
-        # Normalize path slashes for cross-platform compatibility
         normalized_path = os.path.normpath(rel_path)
         full_path = os.path.join(self.root_dir, normalized_path)
         if not os.path.isfile(full_path):
-            # Missing file -> create black image
-            # Returning PIL image for compatibility with transforms
-            # Using RGB
             print(f"Warning: image not found: {full_path}")
             return Image.new("RGB", (self.img_size, self.img_size), (0, 0, 0))
         try:
@@ -52,29 +58,15 @@ class DeepfakeDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int, Dict[str, Any]]:
         row = self.df.iloc[idx]
         rel_path = row["path"]
-        label = int(row["label"]) if not pd.isna(row["label"]) else 0
+        label = int(row["label"] if not pd.isna(row["label"]) else 0)
 
         img = self._load_image(rel_path)
 
-        if self.transform is not None:
-            try:
-                img = self.transform(img)
-            except Exception as e:
-                # If transform fails, return zero tensor
-                print(f"Warning: transform failed for {rel_path}: {e}")
-                img = torch.zeros((3, self.img_size, self.img_size), dtype=torch.float32)
-        else:
-            # Convert to tensor manually (simple fallback)
-            img = self._pil_to_tensor(img)
+        try:
+            img = self.transform(img)
+        except Exception as e:
+            print(f"Warning: transform failed for {rel_path}: {e}")
+            img = torch.zeros((3, self.img_size, self.img_size), dtype=torch.float32)
 
         meta = {"path": rel_path, "index": int(idx)}
         return img, label, meta
-
-    @staticmethod
-    def _pil_to_tensor(img: Image.Image) -> torch.Tensor:
-        # Basic conversion (no normalization)
-        arr = torch.ByteTensor(torch.ByteStorage.from_buffer(img.tobytes()))
-        # PIL stores as (W,H,RGB) bytes; convert to HWC then CHW
-        arr = arr.reshape(img.size[1], img.size[0], 3)
-        arr = arr.permute(2, 0, 1).float().div(255.0)
-        return arr

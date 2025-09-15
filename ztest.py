@@ -1,3 +1,7 @@
-import torch
-print(torch.__version__)        # e.g., 2.3.0
-print(torch.version.cuda)       # Should show the CUDA version, e.g., '11.8'
+try:
+    from code.models.cvt_ms.cls_cvt import ConvolutionalVisionTransformer
+    _has_ms = True
+except ImportError:
+    _has_ms = False
+
+print(_has_ms)
