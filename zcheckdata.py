@@ -1,31 +1,42 @@
 import os
 import pandas as pd
+from torch.utils.data import Dataset, DataLoader
 
-def check_image_exists(csv_path: str, root_dir: str, index: int = 0):
+# ✅ Adjust this to your dataset root
+DATA_ROOT = "C:\Charan Files\deepfake-audio\dataset\LA\LA"
+
+
+def parse_protocol(protocol_path, audio_base_path):
     """
-    Checks if the image at a given CSV row index exists on disk.
-
-    Args:
-        csv_path: Path to the CSV file containing 'path' column.
-        root_dir: Root directory where images are stored.
-        index: Row index in CSV to check image path (default 0).
+    Reads ASVspoof2019 protocol file and returns a dataframe
+    containing file path and label (bonafide/spoof).
     """
-    df = pd.read_csv(csv_path)
-    if "path" not in df.columns:
-        raise ValueError("CSV must contain a 'path' column")
+    rows = []
+    with open(protocol_path, 'r') as f:
+        for line in f:
+            parts = line.strip().split()
+            speaker_id = parts[0]
+            file_name = parts[1]
+            system_id = parts[3]
+            key = parts[4]  # 'bonafide' or 'spoof'
 
-    rel_path = df.iloc[index]["path"]
-    full_path = os.path.normpath(os.path.join(root_dir, rel_path))
+            audio_path = os.path.join(audio_base_path, file_name + ".flac")
+            rows.append({
+                "speaker_id": speaker_id,
+                "file_name": file_name,
+                "system_id": system_id,
+                "label": 1 if key == "bonafide" else 0,
+                "label_text": key,
+                "path": audio_path
+            })
+    return pd.DataFrame(rows)
 
-    if os.path.isfile(full_path):
-        print(f"Image FOUND at row {index}: {full_path}")
-    else:
-        print(f"Image MISSING at row {index}: {full_path}")
+# Example usage:
+train_protocol = os.path.join(DATA_ROOT, "ASVspoof2019_LA_cm_protocols", "ASVspoof2019.LA.cm.train.trn.txt")
+dev_protocol   = os.path.join(DATA_ROOT, "ASVspoof2019_LA_cm_protocols", "ASVspoof2019.LA.cm.dev.trl.txt")
 
-# Example usage
-if __name__ == "__main__":
-    csv_file = "dataset/batches/train1.csv"  # Change to your CSV file path
-    dataset_root = "dataset/real_vs_fake/real_vs_fake"  # Change to your dataset root dir
-    row_to_check = 0  # Change to desired row index to check
+train_df = parse_protocol(train_protocol, os.path.join(DATA_ROOT, "ASVspoof2019_LA_train"))
+dev_df   = parse_protocol(dev_protocol,   os.path.join(DATA_ROOT, "ASVspoof2019_LA_dev"))
 
-    check_image_exists(csv_file, dataset_root, row_to_check)
+print(train_df.head())
+print(f"Train samples: {len(train_df)}, Dev samples: {len(dev_df)}")

@@ -99,8 +99,8 @@ cd deepfake-project
 2. (Optional) Create and activate a virtual environment:
 
 ```bash
-python -m venv .venv
-. .venv\Scripts\Activate.ps1
+py -3.10 -m venv venv
+.\venv\Scripts\Activate.ps1
 ```
 
 3. Install dependencies:
