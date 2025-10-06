@@ -19,3 +19,4 @@ tensorwatch
 ptflops
 einops
 pytest
+soundfile

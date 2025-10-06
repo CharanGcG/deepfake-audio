@@ -21,7 +21,7 @@ def parse_protocol(protocol_path, audio_base_path):
             system_id = parts[3]
             key = parts[4]  # 'bonafide' or 'spoof'
 
-            audio_path = os.path.join(audio_base_path, file_name + ".flac")
+            audio_path = os.path.join(audio_base_path, "flac", file_name + ".flac")
             rows.append({
                 "speaker_id": speaker_id,
                 "file_name": file_name,
