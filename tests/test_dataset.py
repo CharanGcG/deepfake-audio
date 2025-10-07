@@ -1,75 +1,78 @@
 import os
-import tempfile
-import shutil
-import pytest
 import torch
-from PIL import Image
-import numpy as np
+from torch.utils.data import DataLoader
+import torchaudio
+import matplotlib.pyplot as plt
+from code.dataset import AudioDataset  # adjust import if needed
 
-# adjust import based on your module name; assume code.dataset.DeepfakeDataset
-from code.dataset import DeepfakeDataset
+# === Config ===
+csv_file = r"C:\Charan Files\deepfake-audio\dataset\metadata_csv\train.csv"
+root_dir = r"C:\Charan Files\deepfake-audio\dataset"
 
-def make_dummy_image(path, size=(64,64)):
-    arr = (np.random.rand(*size,3) * 255).astype('uint8')
-    img = Image.fromarray(arr)
-    img.save(path)
+sample_rate = 16000
+max_length = 4  # seconds
+batch_size = 4
 
-def test_dataset_basic(tmp_path):
-    # Setup dummy dataset structure
-    root = tmp_path / "real_vs_fake"
-    real = root / "real"
-    fake = root / "fake"
-    real.mkdir(parents=True)
-    fake.mkdir(parents=True)
-    img_r = real / "r1.jpg"
-    img_f = fake / "f1.jpg"
-    make_dummy_image(img_r, size=(32,32))
-    make_dummy_image(img_f, size=(32,32))
-    # Create CSV file
-    csv_path = tmp_path / "df.csv"
-    # paths in CSV are relative to root
-    with open(csv_path, "w") as f:
-        f.write("path,label\n")
-        f.write(f"{real.name}/{img_r.name},1\n")
-        f.write(f"{fake.name}/{img_f.name},0\n")
-    # Instantiate
-    ds = DeepfakeDataset(
-        csv_file=str(csv_path),
-        root_dir=str(root),
-        transform=None,
-        image_size=(32,32)
-    )
-    assert len(ds) == 2
-    # Test first sample
-    sample_img, sample_label = ds[0]
-    assert isinstance(sample_label, int)
-    assert sample_label in (0,1)
-    # check image is tensor or something convertible
-    assert hasattr(sample_img, "shape")
-    # labels correspond correctly
-    labels = [ds[i][1] for i in range(len(ds))]
-    assert set(labels) == {0,1}
+# Optional: log-mel transform
+mel_transform = torchaudio.transforms.MelSpectrogram(
+    sample_rate=sample_rate,
+    n_mels=64,
+    n_fft=1024,
+    hop_length=256
+)
 
-def test_dataset_missing_file(tmp_path, caplog):
-    # simulate missing file
-    root = tmp_path / "root"
-    real = root / "real"
-    real.mkdir(parents=True)
-    # no images here
-    csv_path = tmp_path / "df2.csv"
-    with open(csv_path, "w") as f:
-        f.write("path,label\n")
-        f.write(f"real/missing.jpg,1\n")
-    ds = DeepfakeDataset(
-        csv_file=str(csv_path),
-        root_dir=str(root),
-        transform=None,
-        image_size=(32,32)
-    )
-    # length might still be 1, but image loading should be handled
-    img, label = ds[0]
-    # Maybe you return a black image tensor or something defined
-    # Check that you log a warning or error
-    assert "missing" in caplog.text.lower()
-    assert label == 1
-    assert hasattr(img, "shape")
+# Initialize dataset
+dataset = AudioDataset(
+    csv_path=csv_file,
+    root_dir=root_dir,
+    transform=mel_transform,
+    target_sample_rate=sample_rate,
+    max_length=max_length
+)
+
+loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+# === Basic info ===
+print(f"Number of samples: {len(dataset)}")
+
+# Fetch a single sample
+waveform, label, meta = dataset[0]
+print(f"Sample 0 - Waveform shape: {waveform.shape}, Label: {label}, Path: {meta['path']}")
+
+# Fetch multiple samples
+for i in range(3):
+    waveform, label, meta = dataset[i]
+    print(f"Sample {i}: Shape={waveform.shape}, Label={label}, Path={meta['path']}")
+
+# === Iterate a batch ===
+for batch_waveforms, batch_labels, batch_meta in loader:
+    print(f"Batch waveform shape: {batch_waveforms.shape}")
+    print(f"Batch labels: {batch_labels}")
+    print(f"Batch metadata: {batch_meta}")
+    break  # only first batch
+
+# === Visualize a few samples ===
+for i in range(2):
+    waveform, label, meta = dataset[i]
+    
+    # If mel-spectrogram transform is applied
+    if len(waveform.shape) == 3:  # [channels, n_mels, time]
+        spec = waveform.squeeze(0)  # remove channel dim -> [n_mels, time]
+        
+        # Plot mean waveform over mel bins
+        plt.figure(figsize=(10, 2))
+        plt.plot(spec.mean(dim=0).numpy())
+        plt.title(f"Waveform (mean over mel bins) - Sample {i} - Label {label}")
+        plt.show()
+
+        # Plot mel spectrogram
+        plt.figure(figsize=(10, 4))
+        plt.imshow(spec.log2().detach().numpy(), origin='lower', aspect='auto', cmap='magma')
+        plt.title(f"Mel Spectrogram - Sample {i} - Label {label}")
+        plt.colorbar()
+        plt.show()
+    else:  # raw waveform [1, N]
+        plt.figure(figsize=(10, 2))
+        plt.plot(waveform.squeeze(0).numpy())
+        plt.title(f"Raw Waveform - Sample {i} - Label {label}")
+        plt.show()

@@ -1,32 +1,73 @@
 # code/transforms.py
 """
-Transforms module exposing train and val transforms.
+Transforms module for audio deepfake detection.
 
-Uses torchvision.transforms and provides simple interfaces.
+Provides training and validation transform pipelines using torchaudio.
+Includes common augmentations like noise addition, time masking, and frequency masking.
 """
 
-from torchvision import transforms
 from typing import Callable
+import torch
+import torchaudio
+import random
 
 
-def get_train_transform(img_size: int = 256) -> Callable:
-    """Return a torchvision transform pipeline for training images.
+class AddNoise:
+    """Add random Gaussian noise to waveform."""
+    def __init__(self, noise_level: float = 0.005):
+        self.noise_level = noise_level
 
-    Args:
-        img_size: expected image size (images are already 256x256 in your dataset)
-    """
-    return transforms.Compose([
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomRotation(10),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    def __call__(self, waveform: torch.Tensor) -> torch.Tensor:
+        noise = torch.randn_like(waveform) * self.noise_level
+        return waveform + noise
 
 
-def get_val_transform(img_size: int = 256) -> Callable:
-    """Return transform pipeline for validation/test images."""
-    return transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+class RandomGain:
+    """Randomly amplify or attenuate the audio signal."""
+    def __init__(self, min_gain: float = 0.8, max_gain: float = 1.2):
+        self.min_gain = min_gain
+        self.max_gain = max_gain
+
+    def __call__(self, waveform: torch.Tensor) -> torch.Tensor:
+        gain = random.uniform(self.min_gain, self.max_gain)
+        return waveform * gain
+
+
+def get_train_transform(sample_rate: int = 16000) -> Callable:
+    """Return transform pipeline for training audio data."""
+    return torch.nn.Sequential(
+        torchaudio.transforms.MelSpectrogram(sample_rate=sample_rate, n_mels=64),
+        torchaudio.transforms.AmplitudeToDB(),
+    )
+
+
+def get_train_augment(sample_rate: int = 16000) -> Callable:
+    """Return a transform pipeline with augmentations for training."""
+    def augment(waveform: torch.Tensor) -> torch.Tensor:
+        # Random augmentations on waveform
+        if random.random() < 0.5:
+            waveform = AddNoise()(waveform)
+        if random.random() < 0.5:
+            waveform = RandomGain()(waveform)
+
+        # Convert to log-mel spectrogram
+        mel = torchaudio.transforms.MelSpectrogram(sample_rate=sample_rate, n_mels=64)(waveform)
+        mel_db = torchaudio.transforms.AmplitudeToDB()(mel)
+
+        # Apply time and frequency masking
+        mel_db = torchaudio.transforms.FrequencyMasking(freq_mask_param=8)(mel_db)
+        mel_db = torchaudio.transforms.TimeMasking(time_mask_param=10)(mel_db)
+
+        return mel_db
+
+    return augment
+
+
+def get_val_transform(sample_rate: int = 16000) -> Callable:
+    """Return transform pipeline for validation/testing (no augmentation)."""
+    def transform(waveform: torch.Tensor) -> torch.Tensor:
+        mel = torchaudio.transforms.MelSpectrogram(sample_rate=sample_rate, n_mels=64)(waveform)
+        mel_db = torchaudio.transforms.AmplitudeToDB()(mel)
+        return mel_db
+
+    return transform
