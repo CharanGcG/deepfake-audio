@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from aasist.models.AASIST import Model
-from aasist.explainability.gradcam_explainer import GradCAM
+from explainability.gradcam_explainer import GradCAM
 
 # --- CONFIG ---
 # fake
 #AUDIO_PATH = r"C:\Charan Files\deepfake-audio\dataset\LA\LA\ASVspoof2019_LA_eval\flac\LA_E_1000147.flac"  
 
 # real
-AUDIO_PATH = r"C:\Charan Files\deepfake-audio\dataset\LA\LA\ASVspoof2019_LA_eval\flac\LA_E_2870253.flac"  
+AUDIO_PATH = r"C:\Charan Files\deepfake-audio\dataset\LA\LA\ASVspoof2019_LA_eval\flac\LA_E_5849185.flac"  
 
 
 MODEL_PATH = r"C:\Charan Files\deepfake-audio\aasist\models\weights\AASIST.pth"
@@ -20,6 +20,8 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 # --- DEVICE ---
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# window=torch.ones(n_fft, device="cuda")
 
 # --- MODEL CONFIG ---
 model_config = {
